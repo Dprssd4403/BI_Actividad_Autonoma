@@ -1,0 +1,59 @@
+services:
+  operaciones_mysql:
+    image: mysql:8.4
+    container_name: operaciones_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: supermercado_operaciones_db
+      MYSQL_USER: dprssd
+      MYSQL_PASSWORD: dprssd123
+    ports:
+      - "3307:3306"
+    volumes:
+      - ../../data/operaciones_mysql_data:/var/lib/mysql
+      - ./operaciones-init:/docker-entrypoint-initdb.d:ro
+
+  gestion_postgres:
+    image: postgres:16
+    container_name: gestion_postgres
+    environment:
+      POSTGRES_DB: supermercado_gestion_db
+      POSTGRES_USER: dprssd
+      POSTGRES_PASSWORD: dprssd123
+    ports:
+      - "5444:5432"
+    volumes:
+      - ../../data/gestion_postgres_data:/var/lib/postgresql/data
+      - ./gestion-init:/docker-entrypoint-initdb.d:ro
+
+  staging:
+    image: postgres:16
+    container_name: staging
+    environment:
+        POSTGRES_DB: datawarehouse
+        POSTGRES_USER: dprssd
+        POSTGRES_PASSWORD: dprssd123
+    ports:
+      - "5451:5432"
+    volumes:
+      - ../../data/datawarehouse_data:/var/lib/postgresql/data
+      - ./datawarehouse-init:/docker-entrypoint-initdb.d:ro
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+ 
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    ports: 
+      - "8091:8080"
+    depends_on:
+      - gestion_postgres
+      - operaciones_mysql
+      - staging
